@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -113,7 +113,7 @@ public class ReorderedKeysScript : MonoBehaviour
                         pressable = false;
                         keyCatch[1] = k;
                         swapCount++;
-                        Debug.LogFormat("[Reordered Keys #{0}] Swapped keys {1} and {2}: {3} swaps remaining", moduleID, keyCatch[0], keyCatch[1], 6 - swapCount);
+                        Debug.LogFormat("[Reordered Keys #{0}] Swapped keys {1} and {2}: {3} swaps remaining", moduleID, keyCatch[0] + 1, keyCatch[1] + 1, 6 - swapCount);
                         StartCoroutine(sequence[1]);
                     }
                 }
@@ -128,10 +128,11 @@ public class ReorderedKeysScript : MonoBehaviour
             else
             {
                 onepress = false;
+                pressable = false;
                 swapCount = 0;
                 string[] IO = initialOrder.ToArray();
                 string submission = String.Join(String.Empty, IO);
-                if(submission == answer)
+                if (submission == answer)
                 {
                     Audio.PlaySoundAtTransform("InputCorrect", transform);
                     meter[stage - 1].material = keyColours[7];
@@ -270,7 +271,7 @@ public class ReorderedKeysScript : MonoBehaviour
             bool ech = false;
             for (int i = 0; i < 6; i++)
             {
-                if(info[i][0] == info[i][2])
+                if (info[i][0] == info[i][2])
                 {
                     if (ech == false)
                     {
@@ -288,9 +289,9 @@ public class ReorderedKeysScript : MonoBehaviour
             {
                 int pSum = 0;
                 int sSum = 0;
-                for(int i = 0; i < 6; i++)
+                for (int i = 0; i < 6; i++)
                 {
-                    if(info[i][2] < 3)
+                    if (info[i][2] < 3)
                     {
                         pSum += info[i][1] + 1;
                     }
@@ -304,11 +305,11 @@ public class ReorderedKeysScript : MonoBehaviour
                 pivot = finalList.IndexOf(table[2][pSum][sSum]);
             }
             Debug.LogFormat("[Reordered Keys #{0}] After {1} reset(s), the pivot key was {2}", moduleID, resetCount, pivot + 1);
-            List<string> answ = new List<string> { "1", "2", "3", "4", "5", "6"};
-            while(initialOrder[pivot] != answ[pivot])
+            List<string> answ = new List<string> { "1", "2", "3", "4", "5", "6" };
+            while (initialOrder[pivot] != answ[pivot])
             {
                 string temp = answ[5];
-                for(int i = 5; i > 0; i--)
+                for (int i = 5; i > 0; i--)
                 {
                     answ[i] = answ[i - 1];
                 }
@@ -352,7 +353,7 @@ public class ReorderedKeysScript : MonoBehaviour
                     pressable = true;
                     StopCoroutine(sequence[0]);
                 }
-            }           
+            }
             yield return new WaitForSeconds(0.1f);
         }
     }
@@ -361,7 +362,7 @@ public class ReorderedKeysScript : MonoBehaviour
     {
         for (int i = 0; i < 2; i++)
         {
-            if(i == 1)
+            if (i == 1)
             {
                 i = -1;
                 pressable = true;
@@ -370,13 +371,11 @@ public class ReorderedKeysScript : MonoBehaviour
                 tempinfo[1] = info[keyCatch[0]][1];
                 tempinfo[2] = info[keyCatch[0]][2];
                 string swapOrder = initialOrder[keyCatch[0]];
-                foreach(KMSelectable key in keys)
+                foreach (KMSelectable key in keys)
                 {
                     alreadypressed[keys.IndexOf(key)] = false;
+                    key.transform.localPosition = new Vector3(0, 0, 0);
                 }
-
-                keys[keyCatch[0]].transform.localPosition = new Vector3(0, 0, 0);
-                keys[keyCatch[1]].transform.localPosition = new Vector3(0, 0, 0);
                 info[keyCatch[0]][0] = info[keyCatch[1]][0];
                 info[keyCatch[0]][1] = info[keyCatch[1]][1];
                 info[keyCatch[0]][2] = info[keyCatch[1]][2];
@@ -397,7 +396,14 @@ public class ReorderedKeysScript : MonoBehaviour
                 setKey(keyCatch[0]);
                 setKey(keyCatch[1]);
             }
-            yield return new WaitForSeconds(1f);
+            else
+            {
+                foreach (KMSelectable key in keys)
+                {
+                    key.transform.localPosition = new Vector3(0, 0, -1f);
+                }
+            }
+            yield return new WaitForSeconds(0.5f);
         }
     }
 
