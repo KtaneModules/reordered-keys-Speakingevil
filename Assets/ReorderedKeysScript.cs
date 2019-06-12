@@ -4,12 +4,13 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using KModkit;
+using System.Text.RegularExpressions;
 
 public class ReorderedKeysScript : MonoBehaviour
 {
-
     public KMAudio Audio;
     public KMBombInfo bomb;
+    public KMColorblindMode ColorblindMode;
 
     public List<KMSelectable> keys;
     public Renderer[] meter;
@@ -59,6 +60,7 @@ public class ReorderedKeysScript : MonoBehaviour
     private bool[] alreadypressed = new bool[6] { true, true, true, true, true, true };
     private string answer;
     private List<string> labelList = new List<string> { };
+    private bool colorblind;
 
     //Logging
     static int moduleCounter = 1;
@@ -84,6 +86,7 @@ public class ReorderedKeysScript : MonoBehaviour
 
     void Start()
     {
+        colorblind = ColorblindMode.ColorblindModeActive;
         Reset();
     }
 
@@ -163,31 +166,37 @@ public class ReorderedKeysScript : MonoBehaviour
     private void KeyHLEnd(KMSelectable key)
     {
         if (alreadypressed[keys.IndexOf(key)] == false && moduleSolved == false && pressable == true)
+            setKey(keys.IndexOf(key));
+    }
+
+    private void setKey(int keyIndex)
+    {
+        keyID[keyIndex].material = keyColours[info[keyIndex][0]];
+        switch (info[keyIndex][2])
         {
-            keyID[keys.IndexOf(key)].material = keyColours[info[keys.IndexOf(key)][0]];
-            key.GetComponentInChildren<TextMesh>().text = (info[keys.IndexOf(key)][1] + 1).ToString();
-            switch (info[keys.IndexOf(key)][2])
-            {
-                case 0:
-                    key.GetComponentInChildren<TextMesh>().color = new Color32(255, 25, 25, 255);
-                    break;
-                case 1:
-                    key.GetComponentInChildren<TextMesh>().color = new Color32(25, 255, 25, 255);
-                    break;
-                case 2:
-                    key.GetComponentInChildren<TextMesh>().color = new Color32(25, 25, 255, 255);
-                    break;
-                case 3:
-                    key.GetComponentInChildren<TextMesh>().color = new Color32(25, 255, 255, 255);
-                    break;
-                case 4:
-                    key.GetComponentInChildren<TextMesh>().color = new Color32(255, 75, 255, 255);
-                    break;
-                case 5:
-                    key.GetComponentInChildren<TextMesh>().color = new Color32(255, 255, 75, 255);
-                    break;
-            }
+            case 0:
+                keys[keyIndex].GetComponentInChildren<TextMesh>().color = new Color32(255, 25, 25, 255);
+                break;
+            case 1:
+                keys[keyIndex].GetComponentInChildren<TextMesh>().color = new Color32(25, 255, 25, 255);
+                break;
+            case 2:
+                keys[keyIndex].GetComponentInChildren<TextMesh>().color = new Color32(25, 25, 255, 255);
+                break;
+            case 3:
+                keys[keyIndex].GetComponentInChildren<TextMesh>().color = new Color32(25, 255, 255, 255);
+                break;
+            case 4:
+                keys[keyIndex].GetComponentInChildren<TextMesh>().color = new Color32(255, 75, 255, 255);
+                break;
+            default:
+                keys[keyIndex].GetComponentInChildren<TextMesh>().color = new Color32(255, 255, 75, 255);
+                break;
         }
+        var label = (info[keyIndex][1] + 1).ToString();
+        if (colorblind)
+            label += "\n" + "RGBCMY"[info[keyIndex][2]] + "\n\n" + "RGBCMY"[info[keyIndex][0]];
+        keys[keyIndex].GetComponentInChildren<TextMesh>().text = label;
     }
 
     private void Reset()
@@ -335,29 +344,7 @@ public class ReorderedKeysScript : MonoBehaviour
                     alreadypressed[(i - 4) / 5] = false;
                     keys[(i - 4) / 5].transform.localPosition = new Vector3(0, 0, 0);
                     GetComponent<KMAudio>().PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonRelease, transform);
-                    keyID[(i - 4) / 5].material = keyColours[info[(i - 4) / 5][0]];
-                    switch (info[(i - 4) / 5][2])
-                    {
-                        case 0:
-                            keys[(i - 4) / 5].GetComponentInChildren<TextMesh>().color = new Color32(255, 25, 25, 255);
-                            break;
-                        case 1:
-                            keys[(i - 4) / 5].GetComponentInChildren<TextMesh>().color = new Color32(25, 255, 25, 255);
-                            break;
-                        case 2:
-                            keys[(i - 4) / 5].GetComponentInChildren<TextMesh>().color = new Color32(25, 25, 255, 255);
-                            break;
-                        case 3:
-                            keys[(i - 4) / 5].GetComponentInChildren<TextMesh>().color = new Color32(25, 255, 255, 255);
-                            break;
-                        case 4:
-                            keys[(i - 4) / 5].GetComponentInChildren<TextMesh>().color = new Color32(255, 75, 255, 255);
-                            break;
-                        case 5:
-                            keys[(i - 4) / 5].GetComponentInChildren<TextMesh>().color = new Color32(255, 255, 75, 255);
-                            break;
-                    }
-                    keys[(i - 4) / 5].GetComponentInChildren<TextMesh>().text = labelList[(i - 4) / 5];
+                    setKey((i - 4) / 5);
                 }
                 if (i == 29)
                 {
@@ -383,56 +370,11 @@ public class ReorderedKeysScript : MonoBehaviour
                 tempinfo[1] = info[keyCatch[0]][1];
                 tempinfo[2] = info[keyCatch[0]][2];
                 string swapOrder = initialOrder[keyCatch[0]];
-                keyID[keyCatch[0]].material = keyColours[info[keyCatch[1]][0]];
-                keys[keyCatch[0]].GetComponentInChildren<TextMesh>().text = (info[keyCatch[1]][1] + 1).ToString();
                 foreach(KMSelectable key in keys)
                 {
                     alreadypressed[keys.IndexOf(key)] = false;
-                }                   
-                switch (info[keyCatch[1]][2])
-                {
-                    case 0:
-                        keys[keyCatch[0]].GetComponentInChildren<TextMesh>().color = new Color32(255, 25, 25, 255);
-                        break;
-                    case 1:
-                        keys[keyCatch[0]].GetComponentInChildren<TextMesh>().color = new Color32(25, 255, 25, 255);
-                        break;
-                    case 2:
-                        keys[keyCatch[0]].GetComponentInChildren<TextMesh>().color = new Color32(25, 25, 255, 255);
-                        break;
-                    case 3:
-                        keys[keyCatch[0]].GetComponentInChildren<TextMesh>().color = new Color32(25, 255, 255, 255);
-                        break;
-                    case 4:
-                        keys[keyCatch[0]].GetComponentInChildren<TextMesh>().color = new Color32(255, 75, 255, 255);
-                        break;
-                    case 5:
-                        keys[keyCatch[0]].GetComponentInChildren<TextMesh>().color = new Color32(255, 255, 75, 255);
-                        break;
                 }
-                keyID[keyCatch[1]].material = keyColours[tempinfo[0]];
-                keys[keyCatch[1]].GetComponentInChildren<TextMesh>().text = (tempinfo[1] + 1).ToString();
-                switch (tempinfo[2])
-                {
-                    case 0:
-                        keys[keyCatch[1]].GetComponentInChildren<TextMesh>().color = new Color32(255, 25, 25, 255);
-                        break;
-                    case 1:
-                        keys[keyCatch[1]].GetComponentInChildren<TextMesh>().color = new Color32(25, 255, 25, 255);
-                        break;
-                    case 2:
-                        keys[keyCatch[1]].GetComponentInChildren<TextMesh>().color = new Color32(25, 25, 255, 255);
-                        break;
-                    case 3:
-                        keys[keyCatch[1]].GetComponentInChildren<TextMesh>().color = new Color32(25, 255, 255, 255);
-                        break;
-                    case 4:
-                        keys[keyCatch[1]].GetComponentInChildren<TextMesh>().color = new Color32(255, 75, 255, 255);
-                        break;
-                    case 5:
-                        keys[keyCatch[1]].GetComponentInChildren<TextMesh>().color = new Color32(255, 255, 75, 255);
-                        break;
-                }
+
                 keys[keyCatch[0]].transform.localPosition = new Vector3(0, 0, 0);
                 keys[keyCatch[1]].transform.localPosition = new Vector3(0, 0, 0);
                 info[keyCatch[0]][0] = info[keyCatch[1]][0];
@@ -452,8 +394,29 @@ public class ReorderedKeysScript : MonoBehaviour
                 Debug.LogFormat("[Reordered Keys #{0}] After {1} reset(s) and {3} swaps, the order of key values were: {2}", moduleID, resetCount, order, swapCount);
                 GetComponent<KMAudio>().PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonRelease, transform);
                 StopCoroutine(sequence[1]);
+                setKey(keyCatch[0]);
+                setKey(keyCatch[1]);
             }
             yield return new WaitForSeconds(1f);
+        }
+    }
+
+#pragma warning disable 414
+    private readonly string TwitchHelpMessage = @"!{0} press 123456 [position in reading order]";
+#pragma warning restore 414
+
+    private IEnumerator ProcessTwitchCommand(string command)
+    {
+        var m = Regex.Match(command, @"^\s*(?:press\s*)?([123456 ,;]+)\s*$");
+        if (!m.Success)
+            yield break;
+
+        foreach (var keyToPress in m.Groups[1].Value.Where(ch => ch >= '1' && ch <= '6').Select(ch => keys[ch - '1']))
+        {
+            yield return null;
+            while (!pressable)
+                yield return "trycancel";
+            yield return new[] { keyToPress };
         }
     }
 }
