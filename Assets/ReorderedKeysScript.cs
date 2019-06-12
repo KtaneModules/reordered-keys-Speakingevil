@@ -402,11 +402,20 @@ public class ReorderedKeysScript : MonoBehaviour
     }
 
 #pragma warning disable 414
-    private readonly string TwitchHelpMessage = @"!{0} press 123456 [position in reading order]";
+    private readonly string TwitchHelpMessage = @"!{0} press 123456 [position in reading order] | !{0} colorblind";
 #pragma warning restore 414
 
     private IEnumerator ProcessTwitchCommand(string command)
     {
+        if (Regex.IsMatch(command, @"^\s*colorblind\s*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
+        {
+            colorblind = true;
+            for (int i = 0; i < keys.Count; i++)
+                setKey(i);
+            yield return null;
+            yield break;
+        }
+
         var m = Regex.Match(command, @"^\s*(?:press\s*)?([123456 ,;]+)\s*$");
         if (!m.Success)
             yield break;
